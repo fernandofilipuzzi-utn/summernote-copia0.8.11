@@ -6,7 +6,7 @@
 
 @implements IAsyncDisposable
 
-<div id="@ContainerId" class="summernote-container @CssClass">
+<div id="@ContainerId" class="summernote-container @CssClass" style="display: @(isInitialized==false ? "block" : "none")">
     <textarea id="@EditorId" class="summernote-editor">@Value</textarea>
 </div>
 

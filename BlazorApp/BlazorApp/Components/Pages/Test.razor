@@ -6,6 +6,38 @@
 @attribute [StreamRendering]
 @rendermode InteractiveServer
 
+
 @using BlazorApp.Components.Pages.Components
 
-<Summernote></Summernote>
+<div class="form-group">
+    <InputText @bind-Value="Contenido" class="form-control"></InputText>
+    <button @onclick="btnSetSummernote" class="btn btn-primary">Set Texto</button>
+</div>
+
+<div class="form-group">
+    <button @onclick="btnGetSummernote" class="btn btn-primary">Get Texto</button>
+</div>
+
+
+<Summernote @ref="summernote" ></Summernote>
+
+
+<div>@((MarkupString)Contenido)</div>
+
+@code
+{
+    Summernote summernote;
+
+    string Contenido;
+
+    async Task btnSetSummernote()
+    {
+        await summernote.SetValueAsync(Contenido);
+    }
+
+    async Task btnGetSummernote()
+    {
+        Contenido = await summernote.GetValueAsync();
+
+    }
+}
