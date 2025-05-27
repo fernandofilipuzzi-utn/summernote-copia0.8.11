@@ -1,0 +1,1 @@
+# summernote-copia0.8.11
