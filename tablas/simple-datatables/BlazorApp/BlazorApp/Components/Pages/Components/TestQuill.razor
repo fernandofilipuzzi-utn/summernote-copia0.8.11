@@ -1,0 +1,52 @@
+﻿@page "/testquill"
+
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+
+
+@using BlazorApp.Components.Pages.Components
+
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="form-group">
+            <InputText @bind-Value="Contenido" class="form-control"></InputText>
+            <button @onclick="btnSetSummernote" class="btn btn-primary">Set Texto</button>
+        </div>
+
+        <div class="form-group">
+            <button @onclick="btnGetSummernote" class="btn btn-primary">Get Texto</button>
+        </div>
+
+        <div class="form-group">
+            
+            <QuillComponent @ref="quillnote"></QuillComponent>
+        </div>
+
+        <div class="form-group">
+            <div>@((MarkupString)Contenido)</div>
+        </div>
+    </div>
+
+</section>
+
+@code
+{
+    QuillComponent quillnote;
+
+    string Contenido;
+
+    async Task btnSetSummernote()
+    {
+        quillnote.SetValueAsync(Contenido);
+    }
+
+    async Task btnGetSummernote()
+    {
+        Contenido = await quillnote.GetValueAsync();
+    }
+}

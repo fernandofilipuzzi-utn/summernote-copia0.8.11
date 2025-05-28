@@ -1,7 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Components
 @using Microsoft.JSInterop
 
-
 @implements IAsyncDisposable
 
 <div id="@ContainerId" class="quill-container @CssClass" style="display: @(isInitialized ? "block" : "none")">
@@ -40,27 +39,10 @@
                     theme = Theme,
                     placeholder = Placeholder,
                     readOnly = ReadOnly,
-                    // modules = new
-                    // {
-                    //     toolbar = new object[]
-                    //     {
-                    //         new object[] { "bold", "italic", "underline", "strike" },
-                    //         new object[] { "blockquote", "code-block" },
-                    //         new object[] { new { header = 1 }, new { header = 2 } },
-                    //         new object[] { new { list = "ordered" }, new { list = "bullet" } },
-                    //         new object[] { new { script = "sub" }, new { script = "super" } },
-                    //         new object[] { new { indent = "-1" }, new { indent = "+1" } },
-                    //         new object[] { new { direction = "rtl" } },
-                    //         new object[] { new { size = new string[] { "small", "false", "large", "huge" } } },
-                    //         new object[] { new { header = new int[] { 1, 2, 3, 4, 5, 6, 0 } } },
-                    //         new object[] { new { color = new object[0] }, new { background = new object[0] } },
-                    //         new object[] { new { font = new object[0] } },
-                    //         new object[] { new { align = new object[0] } },
-                    //         new object[] { "clean" },
-                    //         new object[] { "link", "image", "video" }
-                    //     }
-                    // }
-                    modules = GetToolbarConfig(Modules),
+                    modules = new 
+                    {
+                        toolbar=GetToolbarConfig(Modules),
+                    }
                 };
 
                 await jsModule.InvokeVoidAsync("initializeQuill", EditorId, ContainerId, options, DotNetObjectReference.Create(this));
@@ -164,46 +146,40 @@
         }
     }
 
-    private object GetToolbarConfig(string toolbarType)
+    private object[] GetToolbarConfig(string toolbarType)
     {
         return toolbarType.ToLower() switch
         {
             "default" => new object[] {
+                new object[] { new { header = new int[] { 0, 1, 2, 3, 4, 5, 6 } } },
+                new object[] { new { font= new object[]{} }},
+                new object[] { new { size=new object[]{ "small", false, "large", "huge" } } },
                 new object[] { "bold", "italic", "underline", "strike" },
-                new object[] { "blockquote", "code-block" },
-                new object[] { new { header = 1 }, new { header = 2 } },
-                new object[] { new { list = "ordered" }, new { list = "bullet" },new { list="check" } },
-                new object[] { new { script = "sub" }, new { script = "super" } },
-                new object[] { new { indent = "-1" }, new { indent = "+1" } },
-                new object[] { new { direction = "rtl" } },
-                new object[] { new { size = new string[] { "small", "false", "large", "huge" } } },
-                new object[] { new { header = new int[] { 1, 2, 3, 4, 5, 6, 0 } } },
-                new object[] { new { color = new object[0] }, new { background = new object[0] } },
-                new object[] { new { font = new object[0] } },
-                new object[] { new { align = new object[0] } },
+                new object[] { new { color= new object[] { } }},
+                new object[] { new { align= new object[]{} }},
+                new object[] { "link", "image","video" },
                 new object[] { "clean" },
-                new object[] { "link", "image", "video" }
-    },
+        },
             "basic" => new object[] {
-                new object[] { "bold", "italic", "underline", "strike" },
-                new object[] { "blockquote", "code-block" },
-                new object[] { new { header = 1 }, new { header = 2 } },
-                new object[] { new { list = "ordered" }, new { list = "bullet" } ,new { list= "check" }},
-                new object[] { new { script = "sub" }, new { script = "super" } },
-                new object[] { new { indent = "-1" }, new { indent = "+1" } },
-                new object[] { new { direction = "rtl" } },
-                new object[] { new { size = new string[] { "small", "false", "large", "huge" } } },
-                new object[] { new { header = new int[] { 1, 2, 3, 4, 5, 6, 0 } } },
-                new object[] { new { color = new object[0] }, new { background = new object[0] } },
-                new object[] { new { font = new object[0] } },
-                new object[] { new { align = new object[0] } },
-                new object[] { "clean" },
-    },
+                //new object[] { new { header = 1 }, new { header = 2 } },
+                new object[] { new { header = new int[] { 0, 1, 2, 3, 4, 5, 6 } } },
+                //new object[] { new { font= new object[]{} }},
+                new object[] { new { size=new object[]{ "small", false, "large", "huge" } } },
+                new object[] { "bold", "italic", "underline", "strike" },                                                          
+                new object[] { new { color= new object[] { } }},
+                new object[] { new { align= new object[]{} }},
+                new object[] { "link", "image" },
+                new object[] { new { list="ordered"}, new{ list="bullet" }, new{ list="check" } },
+                new object[] { new { script="sub"}, new { script="super" } },
+                //new object[] { new { indent= -1}, new { indent= +1 } },
+               // new object[] { new { direction = "rtl" } },
+        },
             // Add other toolbar configurations as needed
             _ => new object[] {
                 new object[] { "bold", "italic", "underline", "strike" },
                 new object[] { "blockquote", "code-block" },
-    },
+                
+            },
         };
     }
 }
