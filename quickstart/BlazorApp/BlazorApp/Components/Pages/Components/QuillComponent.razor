@@ -1,0 +1,166 @@
+﻿@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+
+@implements IAsyncDisposable
+
+<div id="@ContainerId" class="quill-container @CssClass" style="display: @(isInitialized ? "block" : "none")">
+    <div id="@EditorId" style="height: @Height;">
+        @((MarkupString)Value)
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string Height { get; set; } = "200px";
+    [Parameter] public string Placeholder { get; set; } = "Escribe aquí...";
+    [Parameter] public bool ReadOnly { get; set; } = false;
+    [Parameter] public string Theme { get; set; } = "snow"; // snow or bubble
+    [Parameter] public string CssClass { get; set; } = string.Empty;
+
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+
+    private string ContainerId = Guid.NewGuid().ToString("N")[..8];
+    private string EditorId = Guid.NewGuid().ToString("N")[..8];
+    private IJSObjectReference? jsModule;
+    private bool isInitialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./ng/quillstart/main.js?1");
+
+                var options = new
+                {
+                    theme = Theme,
+                    placeholder = Placeholder,
+                    readOnly = ReadOnly,
+                    modules = new
+                    {
+                        toolbar = new object[]
+                        {
+                            new object[] { "bold", "italic", "underline", "strike" },
+                            new object[] { "blockquote", "code-block" },
+                            new object[] { new { header = 1 }, new { header = 2 } },
+                            new object[] { new { list = "ordered" }, new { list = "bullet" } },
+                            new object[] { new { script = "sub" }, new { script = "super" } },
+                            new object[] { new { indent = "-1" }, new { indent = "+1" } },
+                            new object[] { new { direction = "rtl" } },
+                            new object[] { new { size = new string[] { "small", "false", "large", "huge" } } },
+                            new object[] { new { header = new int[] { 1, 2, 3, 4, 5, 6, 0 } } },
+                            new object[] { new { color = new object[0] }, new { background = new object[0] } },
+                            new object[] { new { font = new object[0] } },
+                            new object[] { new { align = new object[0] } },
+                            new object[] { "clean" },
+                            new object[] { "link", "image", "video" }
+                        }
+                    }
+                };
+
+                await jsModule.InvokeVoidAsync("initializeQuill", EditorId, ContainerId, options, DotNetObjectReference.Create(this));
+
+                isInitialized = true;
+                StateHasChanged();
+
+                if (!string.IsNullOrEmpty(Value))
+                {
+                    await SetValueAsync(Value);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en InitializeQuill: {ex.Message}");
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnContentChanged(string content)
+    {
+        Value = content;
+        await ValueChanged.InvokeAsync(content);
+    }
+
+    public async Task SetValueAsync(string value)
+    {
+        if (isInitialized && jsModule != null)
+        {
+            Value = value;
+            await jsModule.InvokeVoidAsync("setContent", EditorId, value);
+        }
+    }
+
+    public async Task<string> GetValueAsync()
+    {
+        try
+        {
+            if (isInitialized && jsModule != null)
+            {
+                return await jsModule.InvokeAsync<string>("getContent", EditorId);
+            }
+            return Value;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener contenido: {ex.Message}");
+        }
+        return "";
+    }
+
+    public async Task<string> GetTextAsync()
+    {
+        try
+        {
+            if (isInitialized && jsModule != null)
+            {
+                return await jsModule.InvokeAsync<string>("getText", EditorId);
+            }
+            return "";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener texto: {ex.Message}");
+        }
+        return "";
+    }
+
+    public async Task ClearAsync()
+    {
+        if (isInitialized && jsModule != null)
+        {
+            await jsModule.InvokeVoidAsync("clear", EditorId);
+            Value = string.Empty;
+            await ValueChanged.InvokeAsync(string.Empty);
+        }
+    }
+
+    public async Task SetReadOnlyAsync(bool readOnly)
+    {
+        if (isInitialized && jsModule != null)
+        {
+            await jsModule.InvokeVoidAsync("setReadOnly", EditorId, readOnly);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (jsModule != null)
+        {
+            try
+            {
+                await jsModule.InvokeVoidAsync("destroyQuill", EditorId);
+                await jsModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Ignore disconnection errors
+            }
+        }
+    }
+}
