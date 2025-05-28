@@ -6,7 +6,7 @@
 
 @implements IAsyncDisposable
 
-<div id="@ContainerId" class="summernote-container @CssClass" style="display: @(isInitialized==false ? "block" : "none")">
+<div id="@ContainerId" class="summernote-container @CssClass" style="display: @(isInitialized ? "block" : "none")">
     <textarea id="@EditorId" class="summernote-editor">@Value</textarea>
 </div>
 
@@ -31,29 +31,38 @@
     {
         if (firstRender)
         {
-            jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./summernote/main.js?50");
-
-            var options = new
+            try
             {
-                height = Height,
-                placeholder = Placeholder,
-                focus = Focus,
-                toolbar = GetToolbarConfig(Toolbar),
-                callbacks = new
+                jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./summernote/main.js?51");
+
+                var options = new
                 {
-                    onChange = "summernoteBlazor.handleChange"
+                    height = Height,
+                    placeholder = Placeholder,
+                    focus = Focus,
+                    toolbar = GetToolbarConfig(Toolbar),
+                    callbacks = new
+                    {
+                        onChange = "summernoteBlazor.handleChange"
+                    }
+
+                };
+
+                await jsModule.InvokeVoidAsync("initializeSummernote", EditorId, ContainerId, options, DotNetObjectReference.Create(this));
+
+                isInitialized = true;
+                StateHasChanged();
+
+                if (!string.IsNullOrEmpty(Value))
+                {
+                    await SetValueAsync(Value);
                 }
-
-            };
-
-            await jsModule.InvokeVoidAsync("initializeSummernote", EditorId, ContainerId, options, DotNetObjectReference.Create(this));
-            isInitialized = true;
-
-            // Set initial value after initialization
-            if (!string.IsNullOrEmpty(Value))
-            {
-                await SetValueAsync(Value);
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en InitializeEditor: {ex.Message}");
+            }
+            
         }
     }
 
@@ -75,11 +84,20 @@
 
     public async Task<string> GetValueAsync()
     {
-        if (isInitialized && jsModule != null)
+        try
         {
-            return await jsModule.InvokeAsync<string>("getContent", EditorId);
+            if (isInitialized && jsModule != null)
+            {
+                return await jsModule.InvokeAsync<string>("getContent", EditorId);
+            }
+            return Value;
+
         }
-        return Value;
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener contenido: {ex.Message}");
+        }
+        return "";
     }
 
     public async Task ClearAsync()
@@ -102,13 +120,13 @@
                 new object[] { "para", new string[] { "ul", "ol", "paragraph" } },
                 new object[] { "insert", new string[] { "link", "picture", "video" } },
                 new object[] { "view", new string[] { "fullscreen", "codeview", "help" } }
-            },
+        },
             "basic" => new object[] {
                 new object[] { "style", new string[] { "style" } },
                 new object[] { "font", new string[] { "bold",  "italic", "underline", "clear" } },
                 new object[] { "para", new string[] { "ul", "ol", "paragraph" } },
                 new object[] { "view", new string[] { "fullscreen", "codeview", "help" } }
-            },
+        },
             // Add other toolbar configurations as needed
             _ => new object[] {
                 new object[] { "style", new string[] { "style" } },
@@ -116,7 +134,7 @@
                 new object[] { "para", new string[] { "ul", "ol", "paragraph" } },
                 new object[] { "insert", new string[] { "link" , "picture", "video" } },
                 new object[] { "view", new string[] { "fullscreen", "codeview", "help" } }
-            },
+        },
         };
     }
 

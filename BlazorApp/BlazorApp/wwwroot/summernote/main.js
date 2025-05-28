@@ -1,44 +1,48 @@
 ﻿class SummernoteBlazor {
-    constructor()
-    {
+    constructor() {
         this.instances = new Map();
-        this.loadedResources =
-        {
+        this.loadedResources = {
             bootstrap: false,
             summernote: false
         };
     }
 
-    async loadResources()
-    {
-        if (!this.loadedResources.bootstrap)
-        {
+    async loadResources() {
+        if (!this.loadedResources.bootstrap) {
             await this.loadCSS('https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css');
             await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js');
             await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js');
             this.loadedResources.bootstrap = true;
         }
 
-        if (!this.loadedResources.summernote)
-        {
-            //await this.loadCSS('https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs4.min.css');
+        if (!this.loadedResources.summernote) {
             await this.loadCSS('./summernote/summernote-bs4.css');
-            //await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs4.min.js');
             await this.loadScript('./summernote/summernote-bs4.min.js');
-
-            // Cargar idioma español
-            //await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/lang/summernote-es-ES.min.js');
             await this.loadScript('./summernote/lang/summernote-es-ES.min.js');
             this.loadedResources.summernote = true;
         }
+
+        // Asegurar que jQuery esté disponible globalmente
+        await this.ensureJQueryReady();
     }
 
-    loadScript(src)
-    {
-        return new Promise((resolve, reject) =>
-        {
-            if (document.querySelector(`script[src="${src}"]`))
-            {
+    ensureJQueryReady() {
+        return new Promise((resolve) => {
+            const checkJQuery = () => {
+                if (typeof window.$ !== 'undefined' && typeof window.jQuery !== 'undefined') {
+                    resolve();
+                } else {
+                    // Reintenta cada 10ms hasta que jQuery esté disponible
+                    setTimeout(checkJQuery, 10);
+                }
+            };
+            checkJQuery();
+        });
+    }
+
+    loadScript(src) {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector(`script[src="${src}"]`)) {
                 resolve();
                 return;
             }
@@ -52,10 +56,8 @@
     }
 
     loadCSS(href) {
-        return new Promise((resolve, reject) =>
-        {
-            if (document.querySelector(`link[href="${href}"]`))
-            {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector(`link[href="${href}"]`)) {
                 resolve();
                 return;
             }
@@ -69,13 +71,10 @@
         });
     }
 
-    async initializeSummernote(editorId, containerId, options, dotNetRef)
-    {
+    async initializeSummernote(editorId, containerId, options, dotNetRef) {
         try {
+            // Cargar recursos y esperar a que jQuery esté listo
             await this.loadResources();
-
-            // Esperar un momento para asegurar que jQuery esté disponible
-            await new Promise(resolve => setTimeout(resolve, 100));
 
             const container = document.getElementById(containerId);
             if (!container) {
@@ -101,7 +100,7 @@
                 }
             };
 
-            // Inicializar Summernote
+            // Inicializar Summernote - jQuery ya está garantizado
             const $editor = $(`#${editorId}`);
             $editor.summernote(summernoteOptions);
 
@@ -154,12 +153,11 @@
         }
     }
 
-    handleChange(contents) {
-        // Esta función se mantiene para compatibilidad
+    handleChange(contents)
+    {
         console.log('Contenido cambiado:', contents);
     }
 }
-
 
 window.summernoteBlazor = new SummernoteBlazor();
 
@@ -173,11 +171,13 @@ export function setContent(editorId, content)
     return window.summernoteBlazor.setContent(editorId, content);
 }
 
-export function getContent(editorId) {
+export function getContent(editorId)
+{
     return window.summernoteBlazor.getContent(editorId);
 }
 
-export function clear(editorId) {
+export function clear(editorId)
+{
     return window.summernoteBlazor.clear(editorId);
 }
 
