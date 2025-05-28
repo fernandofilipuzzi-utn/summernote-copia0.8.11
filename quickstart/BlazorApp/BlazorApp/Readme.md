@@ -1,0 +1,1 @@
+﻿https://quilljs.com/docs/api#editor
