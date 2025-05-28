@@ -33,7 +33,7 @@
         {
             try
             {
-                jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./summernote/main.js?51");
+                jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./ng/summernote/main.js?51");
 
                 var options = new
                 {
@@ -62,7 +62,7 @@
             {
                 Console.WriteLine($"Error en InitializeEditor: {ex.Message}");
             }
-            
+
         }
     }
 
@@ -120,13 +120,13 @@
                 new object[] { "para", new string[] { "ul", "ol", "paragraph" } },
                 new object[] { "insert", new string[] { "link", "picture", "video" } },
                 new object[] { "view", new string[] { "fullscreen", "codeview", "help" } }
-        },
+    },
             "basic" => new object[] {
                 new object[] { "style", new string[] { "style" } },
                 new object[] { "font", new string[] { "bold",  "italic", "underline", "clear" } },
                 new object[] { "para", new string[] { "ul", "ol", "paragraph" } },
                 new object[] { "view", new string[] { "fullscreen", "codeview", "help" } }
-        },
+    },
             // Add other toolbar configurations as needed
             _ => new object[] {
                 new object[] { "style", new string[] { "style" } },
@@ -134,7 +134,7 @@
                 new object[] { "para", new string[] { "ul", "ol", "paragraph" } },
                 new object[] { "insert", new string[] { "link" , "picture", "video" } },
                 new object[] { "view", new string[] { "fullscreen", "codeview", "help" } }
-        },
+    },
         };
     }
 

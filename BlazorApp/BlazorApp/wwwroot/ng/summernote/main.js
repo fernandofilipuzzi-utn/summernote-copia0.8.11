@@ -1,24 +1,30 @@
-﻿class SummernoteBlazor {
-    constructor() {
+﻿class SummernoteBlazor
+{
+    constructor()
+    {
         this.instances = new Map();
-        this.loadedResources = {
+        this.loadedResources =
+        {
             bootstrap: false,
             summernote: false
         };
     }
 
-    async loadResources() {
-        if (!this.loadedResources.bootstrap) {
+    async loadResources()
+    {
+        if (!this.loadedResources.bootstrap)
+        {
             await this.loadCSS('https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css');
             await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js');
             await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js');
             this.loadedResources.bootstrap = true;
         }
 
-        if (!this.loadedResources.summernote) {
-            await this.loadCSS('./summernote/summernote-bs4.css');
-            await this.loadScript('./summernote/summernote-bs4.min.js');
-            await this.loadScript('./summernote/lang/summernote-es-ES.min.js');
+        if (!this.loadedResources.summernote)
+        {
+            await this.loadCSS('./ng/summernote/summernote-bs4.css');
+            await this.loadScript('./ng/summernote/summernote-bs4.min.js');
+            await this.loadScript('./ng/summernote/lang/summernote-es-ES.min.js');
             this.loadedResources.summernote = true;
         }
 
@@ -26,12 +32,17 @@
         await this.ensureJQueryReady();
     }
 
-    ensureJQueryReady() {
-        return new Promise((resolve) => {
-            const checkJQuery = () => {
-                if (typeof window.$ !== 'undefined' && typeof window.jQuery !== 'undefined') {
+    ensureJQueryReady()
+    {
+        return new Promise((resolve) =>
+        {
+            const checkJQuery = () =>
+            {
+                if (typeof window.$ !== 'undefined' && typeof window.jQuery !== 'undefined')
+                {
                     resolve();
-                } else {
+                }
+                else {
                     // Reintenta cada 10ms hasta que jQuery esté disponible
                     setTimeout(checkJQuery, 10);
                 }
@@ -40,9 +51,12 @@
         });
     }
 
-    loadScript(src) {
-        return new Promise((resolve, reject) => {
-            if (document.querySelector(`script[src="${src}"]`)) {
+    loadScript(src)
+    {
+        return new Promise((resolve, reject) =>
+        {
+            if (document.querySelector(`script[src="${src}"]`))
+            {
                 resolve();
                 return;
             }
@@ -56,8 +70,10 @@
     }
 
     loadCSS(href) {
-        return new Promise((resolve, reject) => {
-            if (document.querySelector(`link[href="${href}"]`)) {
+        return new Promise((resolve, reject) =>
+        {
+            if (document.querySelector(`link[href="${href}"]`))
+            {
                 resolve();
                 return;
             }
@@ -71,9 +87,11 @@
         });
     }
 
-    async initializeSummernote(editorId, containerId, options, dotNetRef) {
-        try {
-            // Cargar recursos y esperar a que jQuery esté listo
+    async initializeSummernote(editorId, containerId, options, dotNetRef)
+    {
+        try
+        {
+            
             await this.loadResources();
 
             const container = document.getElementById(containerId);
@@ -81,20 +99,23 @@
                 throw new Error(`Container with id ${containerId} not found`);
             }
 
-            // Aislar estilos aplicando un namespace específico
             container.classList.add('summernote-isolated');
 
-            // Configurar Summernote con callbacks
-            const summernoteOptions = {
+            const summernoteOptions =
+            {
                 ...options,
                 lang: 'es-ES',
-                callbacks: {
-                    onChange: (contents, $editable) => {
-                        if (dotNetRef) {
+                callbacks:
+                {
+                    onChange: (contents, $editable) =>
+                    {
+                        if (dotNetRef)
+                        {
                             dotNetRef.invokeMethodAsync('OnContentChanged', contents);
                         }
                     },
-                    onInit: () => {
+                    onInit: () =>
+                    {
                         console.log('Summernote inicializado:', editorId);
                     }
                 }
@@ -105,83 +126,88 @@
             $editor.summernote(summernoteOptions);
 
             // Guardar referencia
-            this.instances.set(editorId, {
-                element: $editor,
-                dotNetRef: dotNetRef,
-                containerId: containerId
-            });
+            this.instances.set(editorId,
+                {
+                    element: $editor,
+                    dotNetRef: dotNetRef,
+                    containerId: containerId
+                });
 
             console.log('Summernote configurado exitosamente para:', editorId);
-
-        } catch (error) {
+        }
+        catch (error)
+        {
             console.error('Error inicializando Summernote:', error);
             throw error;
         }
     }
 
-    setContent(editorId, content) {
+    setContent(editorId, content)
+    {
         const instance = this.instances.get(editorId);
-        if (instance) {
+        if (instance)
+        {
             instance.element.summernote('code', content);
         }
     }
 
-    getContent(editorId) {
+    getContent(editorId)
+    {
         const instance = this.instances.get(editorId);
-        if (instance) {
+        if (instance)
+        {
             return instance.element.summernote('code');
         }
         return '';
     }
 
-    clear(editorId) {
+    clear(editorId)
+    {
         const instance = this.instances.get(editorId);
-        if (instance) {
+        if (instance)
+        {
             instance.element.summernote('reset');
         }
     }
 
-    destroySummernote(editorId) {
+    destroySummernote(editorId)
+    {
         const instance = this.instances.get(editorId);
-        if (instance) {
+        if (instance)
+        {
             try {
                 instance.element.summernote('destroy');
                 this.instances.delete(editorId);
-            } catch (error) {
+            }
+            catch (error) {
                 console.warn('Error destruyendo Summernote:', error);
             }
         }
     }
 
-    handleChange(contents)
-    {
+    handleChange(contents) {
         console.log('Contenido cambiado:', contents);
     }
 }
 
 window.summernoteBlazor = new SummernoteBlazor();
 
-export function initializeSummernote(editorId, containerId, options, dotNetRef)
-{
+export function initializeSummernote(editorId, containerId, options, dotNetRef) {
     return window.summernoteBlazor.initializeSummernote(editorId, containerId, options, dotNetRef);
 }
 
-export function setContent(editorId, content)
-{
+export function setContent(editorId, content) {
     return window.summernoteBlazor.setContent(editorId, content);
 }
 
-export function getContent(editorId)
-{
+export function getContent(editorId) {
     return window.summernoteBlazor.getContent(editorId);
 }
 
-export function clear(editorId)
-{
+export function clear(editorId) {
     return window.summernoteBlazor.clear(editorId);
 }
 
-export function destroySummernote(editorId)
-{
+export function destroySummernote(editorId) {
     return window.summernoteBlazor.destroySummernote(editorId);
 }
